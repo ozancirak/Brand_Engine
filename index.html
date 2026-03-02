@@ -59,6 +59,11 @@
       margin-top: 10px;
       font-weight: bold;
     }
+
+    .error {
+      color: #ff6b6b;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
@@ -79,9 +84,10 @@
 <script>
   async function generate() {
     const output = document.getElementById("output");
+
     output.innerHTML = "<div class='loading'>Analyzing competitive landscape...</div>";
 
-    const data = {
+    const payload = {
       brandName: document.getElementById("brandName").value,
       sector: document.getElementById("sector").value,
       targetAudience: document.getElementById("targetAudience").value,
@@ -89,27 +95,42 @@
     };
 
     try {
-      const response = await fetch("https://YOUR-N8N-URL/webhook/brand-snapshot", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      });
+      const response = await fetch(
+        "https://ozncrk.app.n8n.cloud/webhook/brand-snapshot",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
 
       const result = await response.json();
 
+      const data = result.data || result; 
+
       output.innerHTML = `
-        <div><strong>Positioning:</strong><br>${result.positioning}</div><br>
-        <div><strong>Competitive Angle:</strong><br>${result.competitive_angle}</div><br>
-        <div><strong>Tone of Voice:</strong><br>${result.tone_of_voice}</div><br>
-        <div><strong>Tagline:</strong><br>${result.tagline}</div><br>
-        <div><strong>Strategic Risk:</strong><br>${result.strategic_risk}</div>
-        <div class="score">Strategic Score: ${result.lead_score}/100</div>
+        <div><strong>Positioning:</strong><br>${data.positioning}</div><br>
+        <div><strong>Competitive Angle:</strong><br>${data.competitive_angle}</div><br>
+        <div><strong>Tone of Voice:</strong><br>${data.tone_of_voice}</div><br>
+        <div><strong>Tagline:</strong><br>${data.tagline}</div><br>
+        <div><strong>Strategic Risk:</strong><br>${data.strategic_risk}</div>
+        <div class="score">Strategic Score: ${data.lead_score}/100</div>
       `;
 
     } catch (err) {
-      output.innerHTML = "Engine temporarily unavailable.";
+      output.innerHTML = `
+        <div class="error">
+          Engine temporarily unavailable.<br>
+          ${err.message}
+        </div>
+      `;
+      console.error(err);
     }
   }
 </script>
